@@ -1,9 +1,10 @@
-from flask import Flask, request, render_template, redirect, url_for
+from flask import Flask, request, render_template, redirect, url_for, flash
 import itertools
 from PIL import Image
 import os
 
 app = Flask(__name__)
+app.secret_key = 'your_secret_key'  # flash messages için gereklidir
 
 # DNA combinations generation
 def generate_dna_combinations():
@@ -53,6 +54,7 @@ def register():
         }
         print(f"User {username} registered with DNA sequence.")
 
+        flash('Registration successful!', 'success')
         return redirect(url_for('index'))
 
     return render_template('register.html')
@@ -75,13 +77,20 @@ def login():
         # Check if the DNA sequence matches
         if dna_sequence == users[username]['dna_sequence']:
             print(f"Login successful for user: {username}")
-            return "Login successful!"
+            flash('Login successful!', 'success')
+            return redirect(url_for('welcome', username=username))
         else:
             print(f"Login failed for user: {username}, DNA sequence does not match.")
-            return "Login failed, DNA sequence does not match.", 401
+            flash('Login failed, DNA sequence does not match.', 'error')
+            return redirect(url_for('index'))
     else:
         print(f"User {username} does not exist.")
-        return "User does not exist.", 404
+        flash('User does not exist.', 'error')
+        return redirect(url_for('index'))
+
+@app.route('/welcome/<username>')
+def welcome(username):
+    return render_template('welcome.html', username=username)
 
 if __name__ == '__main__':
     if not os.path.exists('static/photos'):
